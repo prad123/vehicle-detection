@@ -107,7 +107,7 @@ Here are the values for the window searching I am using:
 | 500     | 650    | 2.0   |
 
 
-####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
+#### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
 I ran the same set of parameters on the feature extraction for vehicle detection as I used to train my model. I was able to get good results with this number of rectangles, but I found that there is a tradeoff between finding enough rectangles and keeping the search area small to keep the algorithm performant. This seemed to be a decent tradeoff. Here are some of my results:
 
@@ -122,7 +122,7 @@ I ran the same set of parameters on the feature extraction for vehicle detection
 Here's a [link to my video result](./output_video/project_video_out.mp4)
 
 
-####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
+#### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
 This code lives in the *Heatmapping* section of the notebook.
 
