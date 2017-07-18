@@ -12,18 +12,6 @@ The goals / steps of this project are the following:
 * Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
 * Estimate a bounding box for vehicles detected.
 
----prev
-
-**Vehicle Detection Project**
-
-The goals / steps of this project are the following:
-
-* Perform a Histogram of Oriented Gradients (HOG) feature extraction on a labeled training set of images and train a classifier Linear SVM classifier
-* Optionally, you can also apply a color transform and append binned color features, as well as histograms of color, to your HOG feature vector.
-* Note: for those first two steps don't forget to normalize your features and randomize a selection for training and testing.
-* Implement a sliding-window technique and use your trained classifier to search for vehicles in images.
-* Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
-* Estimate a bounding box for vehicles detected.
 
 [//]: # (Image References)
 [image1]: ./output_images/training-examples.png
@@ -45,7 +33,7 @@ The goals / steps of this project are the following:
 
 The code for this step is contained in the in the cells of the IPython notebook  under the label **HOG Functions**.
 
-I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
+I started by reading in all the `vehicle` and `non-vehicle` images.  Here are some examples of each of the `vehicle` and `non-vehicle` classes:
 
 ![alt text][image1]
 
@@ -57,7 +45,7 @@ Here is an example using the `Y` channel of the `YUV` color space and HOG parame
 
 #### 2. Explain how you settled on your final choice of HOG parameters.
 
-I tried various combinations of parameters using more or a guess and check technique and settled in on the following parameters:
+I tried various combinations of parameters using more of a guess and check technique and settled in on the following parameters:
 
 ```
 color_space = 'YUV'     # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
@@ -74,13 +62,33 @@ hog_feat = True         # HOG features on or off
 
 I fiddled with the parameters, extracted the features from the training data, fit a model, ran 10 predictions, and tested the accuracy of the model. The output of those steps was the feedback loop for my process.
 
-For next steps, I'd have liked to do a full factorial sweep on many of the options and looked at the tradeoff between feature extracion time, model prediction time, and model accuracy. There seems to be some clear trafeoffs between these parameters, and there are probably some combination of model parameters that are better than others.
+For next steps, I'd have liked to do a full factorial sweep on many of the options and looked at the tradeoff between feature extraction time, model prediction time, and model accuracy. There seems to be some clear tradeoffs between these parameters, and there are probably some combinations of model parameters that are better than others.
 
 #### 3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I used the process outlined in the lectures and quizes to train a LinearSVC model from the sklearn support vector machine package. The training process involved extracting all of the feature vectors for each image in the car and non-car training images. Because I used both HOG and color features for my model, I I then randomly split this data into a test and train set using the `train_test_split` from the `sklearn.model_selection` package. The training set was used to train the model, while the test set was used to test the accuracy of the model.
-
 The model is trained in the *Train the Classifer* section of the IPython Notebook.
+
+I used the process outlined in the lectures and quizzes to train a LinearSVC model from the sklearn support vector machine package. The training process involved extracting all of the feature vectors for each image in the car and non-car training images. Because I used both HOG and color features for my model, I normalized the features using this code:
+
+```python
+X_scaler = StandardScaler().fit(X)
+scaled_X = X_scaler.transform(X)
+```
+
+I then randomly split this data into a test and train set using the `train_test_split` from the `sklearn.model_selection` package. The training set was used to train the model, while the test set was used to test the accuracy of the model. Here's what that code looks like:
+
+```python
+rand_state = np.random.randint(0, 100)
+X_train, X_test, y_train, y_test = train_test_split(
+    scaled_X, y, test_size=0.2, random_state=rand_state)
+```
+
+I finally use this data to train the model like so:
+
+```python
+svc = LinearSVC()
+svc.fit(X_train, y_train)
+```
 
 ### Sliding Window Search
 
@@ -101,7 +109,7 @@ Here are the values for the window searching I am using:
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-I ran the same set of parameters on the feature extraction for vehicle detection as I used to train my model. I was able to get good results with this number of rectangles, but I found that there is a big tradeoff between finding enough rectangles and keeping the search area small to keep the algorithm performant. This seemed to be a decent tradeoff. Here are some of my results:
+I ran the same set of parameters on the feature extraction for vehicle detection as I used to train my model. I was able to get good results with this number of rectangles, but I found that there is a tradeoff between finding enough rectangles and keeping the search area small to keep the algorithm performant. This seemed to be a decent tradeoff. Here are some of my results:
 
 ![alt text][image4]
 ![alt text][image5]
@@ -116,6 +124,8 @@ Here's a [link to my video result](./output_video/project_video_out.mp4)
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
+This code lives in the *Heatmapping* section of the notebook.
+
 The `find_cars()` function mentioned earlier produces a set of rectangular boxes where the model says that there are car images. Here's what the outupt of that function looks like, showing all the rectangles that detected vehicles:
 
 ![alt text][image6]
@@ -126,7 +136,7 @@ From these positive detection rectangles, I created a heatmap by adding 1 to a b
 heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
 ```
 
-I then thresholded that map by throwing out all the heapmap areas that didn't have more than 3 positive detections using this code:
+I then thresholded that map by throwing out all the heatmap areas that didn't have more than 3 positive detections using this code:
 
 ```python
 heatmap[heatmap <= threshold] = 0
@@ -136,12 +146,11 @@ Here's what that heatmap looks like:
 
 ![alt text][image7]
 
-Once I had my vehicle detection areas, I used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap and assumed that each one belongs to a vehicle.   I constructed bounding boxes to cover the area of each blob detected.
+Once I had my vehicle detection areas, I used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap and assumed that each one belongs to a vehicle. I constructed bounding boxes to cover the area of each blob detected.
 
 Here's what the final output looks like:
 
 ![alt text][image8]
-
 
 ---
 
