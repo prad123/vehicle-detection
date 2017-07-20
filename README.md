@@ -152,6 +152,8 @@ Here's what the final output looks like:
 
 ![alt text][image8]
 
+In addition to these methods, I also use a `deque` structure to keep track of the previous 5 heatmaps when processing a video. I add these previous heatmaps together with the latest one and apply the same threshold times the number of heatmaps I've added together. This system should help get rid of unwanted detections because if there is only one frame that detects an outlier, then the odds are reduced that we will categorize that detection as a vehicle since it only happened in one frame.
+
 ---
 
 ### Discussion
@@ -159,8 +161,6 @@ Here's what the final output looks like:
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 The biggest problem I encountered is lack of performance with the pipeline. I need to make things a lot faster if I want it to run in (near) real time. I could reduce the number of features that I extract, or try to use even fewer search rectangles for the pipeline. In addition to the speed, my model seems to be pretty sensitive to non-car images. I had to bump up the threshold in the heatmap to eliminate them, but perhaps that's an issue with my model parameter selection.
-
-To improve the frame to frame stability of the video, I need to implement a class that keeps track of all the current vehicles, their size and location. This way I can use a weighted average technique to apply the new vehicles that are detected to the current set of "known" vehicles.
 
 ---
 
